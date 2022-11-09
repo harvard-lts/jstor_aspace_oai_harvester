@@ -1,0 +1,29 @@
+# Build all images and run all containers
+# `docker-compose -f docker-compose-local.yml up -d --build --force-recreate`
+
+version: '3.7'
+
+services:
+
+  jstor-harvester:
+    container_name: 'jstor-harvester'
+    build:
+      context: './'
+      dockerfile: './DockerfileLocal'
+    volumes:
+      - './:/home/jstorforumadm'
+    env_file:
+      - '.env'
+    environment:
+      QUEUE_NAME: first_queue
+      NEXT_QUEUE_NAME: second_queue
+    ports:
+      # Worker API
+      - '24006:8081'
+    networks:
+      - jstorforum-net
+
+# Create a custom docker network if it does not exist already
+networks:
+  jstorforum-net:
+    name: jstorforum-net
