@@ -12,11 +12,12 @@ services:
       dockerfile: './DockerfileLocal'
     volumes:
       - './:/home/jstorforumadm'
+      - '/tmp:/tmp'
     env_file:
       - '.env'
     environment:
-      QUEUE_NAME: first_queue
-      NEXT_QUEUE_NAME: second_queue
+      QUEUE_NAME: proto_harvest
+      NEXT_QUEUE_NAME: proto_transform
     ports:
       # Worker API
       - '25000:8081'

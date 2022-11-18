@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
+from sickle import Sickle
 
 class JstorHarvester():
     def __init__(self):
@@ -43,6 +44,15 @@ Update job timestamp file"""
         current_app.logger.error("**************JStor Harvester: Do Task**************")
         current_app.logger.error("WORKER NUMBER " + str(os.getenv('CONTAINER_NUMBER')))
 
+        sickle = Sickle(os.getenv("oai_url"))
+        
+        records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
+        for item in records:
+            current_app.logger.info(item.header.identifier)
+            f = open("/tmp/JSTORFORUM/harvested/loebmusic/" + item.header.identifier + ".xml", "w")
+            f.write(item.raw)
+            f.close()
+
         result['success'] = True
         # altered line so we can see request json coming through properly
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
@@ -50,7 +60,7 @@ Update job timestamp file"""
         sleep_s = os.getenv("TASK_SLEEP_S", 1)
 
         current_app.logger.info("Sleep " + str(sleep_s) + "seconds")
-        sleep(sleep_s)
+        sleep(1)
         
         return result
 
