@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
+from pymongo import MongoClient
 
 class JstorHarvester():
     def __init__(self):
@@ -51,6 +52,22 @@ Update job timestamp file"""
 
         current_app.logger.info("Sleep " + str(sleep_s) + "seconds")
         sleep(sleep_s)
+
+        #integration test: write small record to mongo to prove connectivity
+        try:
+            mongo_url = os.environ.get('MONGO_URL')
+            mongo_dbname = os.environ.get('MONGO_DBNAME')
+            mongo_client = MongoClient(mongo_url, maxPoolSize=1)
+
+            mongo_db = mongo_client[mongo_dbname]
+            integration_collection = mongo_db["integration_test"]
+            job_ticket_id = request_json['job_ticket_id']
+            test_id = "harvester-" + job_ticket_id
+            test_record = { "_id": test_id, "status": "inserted" }
+            integration_collection.insert_one(test_record)
+            mongo_client.close()
+        except Exception as err:
+            current_app.logger.error("Error: unable to connect to mongodb, {}", err)
         
         return result
 
