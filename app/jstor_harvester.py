@@ -63,7 +63,7 @@ Update job timestamp file"""
             integration_collection = mongo_db["integration_test"]
             job_ticket_id = request_json['job_ticket_id']
             test_id = "harvester-" + job_ticket_id
-            test_record = { "_id": test_id, "status": "inserted" }
+            test_record = { "id": test_id, "status": "inserted" }
             integration_collection.insert_one(test_record)
             mongo_client.close()
         except Exception as err:
