@@ -61,7 +61,7 @@ Update job timestamp file"""
 
             mongo_db = mongo_client[mongo_dbname]
             integration_collection = mongo_db["integration_test"]
-            job_ticket_id = request_json['job_ticket_id']
+            job_ticket_id = str(request_json['job_ticket_id'])
             test_id = "harvester-" + job_ticket_id
             test_record = { "id": test_id, "status": "inserted" }
             integration_collection.insert_one(test_record)
