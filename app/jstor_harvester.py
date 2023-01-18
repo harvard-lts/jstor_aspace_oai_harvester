@@ -48,7 +48,7 @@ Update job timestamp file"""
         # altered line so we can see request json coming through properly
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
 
-        sleep_s = os.getenv("TASK_SLEEP_S", 1)
+        sleep_s = int(os.getenv("TASK_SLEEP_S", 1))
 
         current_app.logger.info("Sleep " + str(sleep_s) + " seconds")
         sleep(sleep_s)
