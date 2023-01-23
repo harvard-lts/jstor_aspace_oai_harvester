@@ -15,8 +15,8 @@ services:
     env_file:
       - '.env'
     environment:
-      QUEUE_NAME: first_queue
-      NEXT_QUEUE_NAME: second_queue
+      QUEUE_NAME: first_queue_itest
+      NEXT_QUEUE_NAME: transform_jstorforum_itest
     ports:
       # Worker API
       - '25000:8081'

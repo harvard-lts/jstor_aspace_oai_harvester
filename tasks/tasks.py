@@ -15,7 +15,7 @@ http_client = requests.Session()
 http_client.mount("https://", adapter)
 http_client.mount("http://", adapter)
 
-@celery.task(ignore_result=True, acks_late=True)
+@celery.task(ignore_result=False, acks_late=True)
 def do_task(message):
     url = "https://localhost:8081/jstor_harvester/do_task"
     celeryapp.execute.send_task("tasks.tasks.do_task", args=[message], kwargs={}, queue=os.getenv('NEXT_QUEUE_NAME'))
