@@ -4,7 +4,6 @@ from datetime import datetime
 from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
-from pymongo import MongoClient
 from sickle import Sickle
 
 class JstorHarvester():
