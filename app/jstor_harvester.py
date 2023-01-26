@@ -44,25 +44,30 @@ Update job timestamp file"""
         #Get the job ticket which should be the parent ticket
         current_app.logger.error("**************JStor Harvester: Do Task**************")
         current_app.logger.error("WORKER NUMBER " + str(os.getenv('CONTAINER_NUMBER')))
-        current_app.logger.error("oai_url")
-        current_app.logger.error(os.getenv("oai_url"))
-        sickle = Sickle(os.getenv("oai_url"))
-        
-        records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
-        for item in records:
-            current_app.logger.info(item.header.identifier)
-            f = open("/tmp/JSTORFORUM/harvested/loebmusic/" + item.header.identifier + ".xml", "w")
-            f.write(item.raw)
-            f.close()
-
-        result['success'] = True
-        # altered line so we can see request json coming through properly
-        result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
 
         sleep_s = int(os.getenv("TASK_SLEEP_S", 1))
 
         current_app.logger.info("Sleep " + str(sleep_s) + " seconds")
         sleep(sleep_s)
+
+        jstorforum = False
+        if 'jstorforum' in request_json:
+            jstorforum = request_json['jstorforum']
+        if jstorforum:
+            current_app.logger.error("oai_url")
+            current_app.logger.error(os.getenv("oai_url"))
+            sickle = Sickle(os.getenv("oai_url"))
+            
+            records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
+            for item in records:
+                current_app.logger.info(item.header.identifier)
+                f = open("/tmp/JSTORFORUM/harvested/loebmusic/" + item.header.identifier + ".xml", "w")
+                f.write(item.raw)
+                f.close()
+
+            result['success'] = True
+            # altered line so we can see request json coming through properly
+            result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -86,8 +91,6 @@ Update job timestamp file"""
             except Exception as err:
                 current_app.logger.error("Error: unable to connect to mongodb, {}", err)
 
-        current_app.logger.info("Sleep " + str(sleep_s) + "seconds")
-        
         return result
 
     def revert_task(self, job_ticket_id, task_name):
