@@ -5,5 +5,5 @@
 // default values: 
 //  registryCredentialsId = "${env.REGISTRY_ID}"
 //  registryUri = 'https://registry.lts.harvard.edu'
-def endpoints = []
-ltsBasicPipeline.call("jstor-aspace-oai-harvester", "JSTORFORUM", "jstorforum", "", endpoints, "lts-jstorforum-alerts")
+def endpoints = ['integration']
+ltsBasicPipeline.call("jstor-aspace-oai-harvester", "JSTORFORUM", "jstorforum", "25003", endpoints, "lts-jstorforum-alerts")
