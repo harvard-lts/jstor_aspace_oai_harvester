@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
+from pymongo import MongoClient
 from sickle import Sickle
 
 class JstorHarvester():
@@ -43,7 +44,8 @@ Update job timestamp file"""
         #Get the job ticket which should be the parent ticket
         current_app.logger.error("**************JStor Harvester: Do Task**************")
         current_app.logger.error("WORKER NUMBER " + str(os.getenv('CONTAINER_NUMBER')))
-
+        current_app.logger.error("oai_url")
+        current_app.logger.error(os.getenv("oai_url"))
         sickle = Sickle(os.getenv("oai_url"))
         
         records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
