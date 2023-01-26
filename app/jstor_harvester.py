@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
 from pymongo import MongoClient
+from sickle import Sickle
 
 class JstorHarvester():
     def __init__(self):
@@ -43,6 +44,16 @@ Update job timestamp file"""
         #Get the job ticket which should be the parent ticket
         current_app.logger.error("**************JStor Harvester: Do Task**************")
         current_app.logger.error("WORKER NUMBER " + str(os.getenv('CONTAINER_NUMBER')))
+        current_app.logger.error("oai_url")
+        current_app.logger.error(os.getenv("oai_url"))
+        sickle = Sickle(os.getenv("oai_url"))
+        
+        records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
+        for item in records:
+            current_app.logger.info(item.header.identifier)
+            f = open("/tmp/JSTORFORUM/harvested/loebmusic/" + item.header.identifier + ".xml", "w")
+            f.write(item.raw)
+            f.close()
 
         result['success'] = True
         # altered line so we can see request json coming through properly
@@ -74,6 +85,8 @@ Update job timestamp file"""
                 mongo_client.close()
             except Exception as err:
                 current_app.logger.error("Error: unable to connect to mongodb, {}", err)
+
+        current_app.logger.info("Sleep " + str(sleep_s) + "seconds")
         
         return result
 
