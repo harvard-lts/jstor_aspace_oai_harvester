@@ -51,8 +51,9 @@ class JstorHarvester():
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-
-            harvestconfig = [
+            with open('harvestjobs.json') as f:
+                harvjobsjson = f.read()
+            '''harvestconfig = [
                         {
                             "jobName": "jstorforum",
                             "harvests": {
@@ -72,7 +73,10 @@ class JstorHarvester():
                             }
                         },
                         {"jobName": "aspace"}
-                    ]
+                    ]'''
+            harvestconfig = json.loads(harvjobsjson)
+            current_app.logger.debug("harvestconfig")        
+            current_app.logger.debug(harvestconfig) 
             harvestDir = "/tmp/JSTORFORUM/harvested/"        
             for job in harvestconfig:     
                 if job["jobName"] == "jstorforum":   
