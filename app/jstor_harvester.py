@@ -42,8 +42,8 @@ Update job timestamp file"""
         }
 
         #Get the job ticket which should be the parent ticket
-        current_app.logger.error("**************JStor Harvester: Do Task**************")
-        current_app.logger.error("WORKER NUMBER " + str(os.getenv('CONTAINER_NUMBER')))
+        current_app.logger.info("**************JStor Harvester: Do Task**************")
+        current_app.logger.info("WORKER NUMBER " + str(os.getenv('CONTAINER_NUMBER')))
 
         sleep_s = int(os.getenv("TASK_SLEEP_S", 1))
 
@@ -52,10 +52,11 @@ Update job timestamp file"""
 
         jstorforum = False
         if 'jstorforum' in request_json:
+            current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            current_app.logger.error("oai_url")
-            current_app.logger.error(os.getenv("oai_url"))
+            current_app.logger.debug("oai_url")
+            current_app.logger.debug(os.getenv("oai_url"))
             sickle = Sickle(os.getenv("oai_url"))
             
             records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
