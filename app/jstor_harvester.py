@@ -78,7 +78,7 @@ class JstorHarvester():
             harvestconfig = json.loads(harvjobsjson)
             current_app.logger.debug("harvestconfig")        
             current_app.logger.debug(harvestconfig) 
-            harvestDir = os.getenv("harvest_dir")        
+            harvestDir = os.getenv("jstor_harvest_dir")        
             for job in harvestconfig:     
                 if job["jobName"] == "jstorforum":   
                     for set in job["harvests"]["sets"]:
@@ -87,7 +87,7 @@ class JstorHarvester():
                         if not os.path.exists(harvestDir + opDir):
                             os.makedirs(harvestDir + opDir)
                         current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
-                        sickle = Sickle(os.getenv("oai_url"))
+                        sickle = Sickle(os.getenv("jstor_oai_url"))
                         
                         records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
                         for item in records:
