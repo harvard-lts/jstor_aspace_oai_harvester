@@ -1,0 +1,21 @@
+[
+    {
+        "jobName": "jstorforum",
+        "harvests": {
+            "baseUrl": "http://oai.forum.jstor.org/oai\u201d",
+            "metadataPrefix": "oai_ssio",
+            "sets": [
+                {
+                    "setSpec": 713,
+                    "opDir": "warren"
+                },
+                {
+                    "setSpec": 720,
+                    "opDir": "loebmusic"
+                }
+            ],
+            "opDir": "SSIO"
+        }
+    },
+    {"jobName": "aspace"}
+]

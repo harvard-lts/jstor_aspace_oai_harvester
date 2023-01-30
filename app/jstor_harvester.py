@@ -53,6 +53,7 @@ class JstorHarvester():
         if jstorforum:
             with open('harvestjobs.json') as f:
                 harvjobsjson = f.read()
+            # leave during development, actually pulling from config file    
             '''harvestconfig = [
                         {
                             "jobName": "jstorforum",
@@ -77,7 +78,7 @@ class JstorHarvester():
             harvestconfig = json.loads(harvjobsjson)
             current_app.logger.debug("harvestconfig")        
             current_app.logger.debug(harvestconfig) 
-            harvestDir = "/tmp/JSTORFORUM/harvested/"        
+            harvestDir = os.getenv("harvest_dir")        
             for job in harvestconfig:     
                 if job["jobName"] == "jstorforum":   
                     for set in job["harvests"]["sets"]:
