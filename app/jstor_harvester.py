@@ -76,8 +76,8 @@ class JstorHarvester():
                         {"jobName": "aspace"}
                     ]'''
             harvestconfig = json.loads(harvjobsjson)
-            current_app.logger.debug("harvestconfig")        
-            current_app.logger.debug(harvestconfig) 
+            #current_app.logger.debug("harvestconfig")        
+            #current_app.logger.debug(harvestconfig) 
             harvestDir = os.getenv("jstor_harvest_dir")        
             for job in harvestconfig:     
                 if job["jobName"] == "jstorforum":   
