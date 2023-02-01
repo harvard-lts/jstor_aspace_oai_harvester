@@ -30,10 +30,6 @@ class JstorHarvester():
         return result
 
     def do_task(self, request_json):
-        """\
-Get job tracker file
-Append job ticket id to jobs in process list in the tracker file
-Update job timestamp file"""
 
         result = {
           'success': False,
@@ -55,20 +51,28 @@ Update job timestamp file"""
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            current_app.logger.debug("oai_url")
-            current_app.logger.debug(os.getenv("oai_url"))
-            sickle = Sickle(os.getenv("oai_url"))
-            
-            records = sickle.ListRecords(metadataPrefix='oai_ssio', set='720')
-            for item in records:
-                current_app.logger.info(item.header.identifier)
-                f = open("/tmp/JSTORFORUM/harvested/loebmusic/" + item.header.identifier + ".xml", "w")
-                f.write(item.raw)
-                f.close()
-
-            result['success'] = True
-            # altered line so we can see request json coming through properly
-            result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
+            with open('harvestjobs.json') as f:
+                harvjobsjson = f.read()
+            harvestconfig = json.loads(harvjobsjson)
+            #current_app.logger.debug("harvestconfig")        
+            #current_app.logger.debug(harvestconfig) 
+            harvestDir = os.getenv("jstor_harvest_dir")        
+            for job in harvestconfig:     
+                if job["jobName"] == "jstorforum":   
+                    for set in job["harvests"]["sets"]:
+                        setSpec = "{}".format(set["setSpec"])
+                        opDir = set["opDir"]
+                        if not os.path.exists(harvestDir + opDir):
+                            os.makedirs(harvestDir + opDir)
+                        current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
+                        sickle = Sickle(os.getenv("jstor_oai_url"))
+                        
+                        records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                        for item in records:
+                            current_app.logger.info(item.header.identifier)
+                            f = open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w")
+                            f.write(item.raw)
+                            f.close()
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -91,7 +95,10 @@ Update job timestamp file"""
                 mongo_client.close()
             except Exception as err:
                 current_app.logger.error("Error: unable to connect to mongodb, {}", err)
-
+                
+        result['success'] = True
+        # altered line so we can see request json coming through properly
+        result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
     def revert_task(self, job_ticket_id, task_name):

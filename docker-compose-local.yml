@@ -13,6 +13,7 @@ services:
     volumes:
       - './:/home/jstorforumadm'
       - '/tmp:/tmp'
+      - './harvestjobs.json:/home/jstorforumadm/harvestjobs.json'
     env_file:
       - '.env'
     environment:
