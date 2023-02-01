@@ -117,7 +117,7 @@ class JstorHarvester():
                 mongo_client.close()
             except Exception as err:
                 current_app.logger.error("Error: unable to connect to mongodb, {}", err)
-
+                
         result['success'] = True
         # altered line so we can see request json coming through properly
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
