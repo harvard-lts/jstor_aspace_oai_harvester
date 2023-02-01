@@ -53,28 +53,6 @@ class JstorHarvester():
         if jstorforum:
             with open('harvestjobs.json') as f:
                 harvjobsjson = f.read()
-            # leave during development, actually pulling from config file    
-            '''harvestconfig = [
-                        {
-                            "jobName": "jstorforum",
-                            "harvests": {
-                                "baseUrl": "http://oai.forum.jstor.org/oai\u201d",
-                                "metadataPrefix": "oai_ssio",
-                                "sets": [
-                                    {
-                                        "setSpec": 713,
-                                        "opDir": "warren"
-                                    },
-                                    {
-                                        "setSpec": 720,
-                                        "opDir": "loebmusic"
-                                    }
-                                ],
-                                "opDir": "SSIO"
-                            }
-                        },
-                        {"jobName": "aspace"}
-                    ]'''
             harvestconfig = json.loads(harvjobsjson)
             #current_app.logger.debug("harvestconfig")        
             #current_app.logger.debug(harvestconfig) 
