@@ -107,9 +107,8 @@ class JstorHarvester():
                     records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
                     for item in records:
                         current_app.logger.info(item.header.identifier)
-                        f = open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w")
-                        f.write(item.raw)
-                        f.close()
+                        with open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w") as f:
+                            f.write(item.raw)
 
     def revert_task(self, job_ticket_id, task_name):
         return True
