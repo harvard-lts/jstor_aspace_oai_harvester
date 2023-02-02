@@ -51,28 +51,7 @@ class JstorHarvester():
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            with open('harvestjobs.json') as f:
-                harvjobsjson = f.read()
-            harvestconfig = json.loads(harvjobsjson)
-            #current_app.logger.debug("harvestconfig")        
-            #current_app.logger.debug(harvestconfig) 
-            harvestDir = os.getenv("jstor_harvest_dir")        
-            for job in harvestconfig:     
-                if job["jobName"] == "jstorforum":   
-                    for set in job["harvests"]["sets"]:
-                        setSpec = "{}".format(set["setSpec"])
-                        opDir = set["opDir"]
-                        if not os.path.exists(harvestDir + opDir):
-                            os.makedirs(harvestDir + opDir)
-                        current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
-                        sickle = Sickle(os.getenv("jstor_oai_url"))
-                        
-                        records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
-                        for item in records:
-                            current_app.logger.info(item.header.identifier)
-                            f = open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w")
-                            f.write(item.raw)
-                            f.close()
+            self.do_harvest()
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -80,6 +59,7 @@ class JstorHarvester():
             integration_test = request_json['integration_test']
         if (integration_test):
             current_app.logger.info("running integration test")
+            self.do_harvest(True)
             try:
                 mongo_url = os.environ.get('MONGO_URL')
                 mongo_dbname = os.environ.get('MONGO_DBNAME')
@@ -100,6 +80,35 @@ class JstorHarvester():
         # altered line so we can see request json coming through properly
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
+
+    def do_harvest(self, itest=False):
+        if itest:
+            configfile = "harvestjobs_test.json"
+        else:
+            configfile = "harvestjobs.json"
+        current_app.logger.info("configfile: " + configfile)
+
+        with open(configfile) as f:
+            harvjobsjson = f.read()
+        harvestconfig = json.loads(harvjobsjson)
+        #current_app.logger.debug("harvestconfig")        
+        #current_app.logger.debug(harvestconfig) 
+        harvestDir = os.getenv("jstor_harvest_dir")        
+        for job in harvestconfig:     
+            if job["jobName"] == "jstorforum":   
+                for set in job["harvests"]["sets"]:
+                    setSpec = "{}".format(set["setSpec"])
+                    opDir = set["opDir"]
+                    if not os.path.exists(harvestDir + opDir):
+                        os.makedirs(harvestDir + opDir)
+                    current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
+                    sickle = Sickle(os.getenv("jstor_oai_url"))
+                    
+                    records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                    for item in records:
+                        current_app.logger.info(item.header.identifier)
+                        with open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w") as f:
+                            f.write(item.raw)
 
     def revert_task(self, job_ticket_id, task_name):
         return True
