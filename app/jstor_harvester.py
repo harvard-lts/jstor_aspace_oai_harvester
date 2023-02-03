@@ -6,7 +6,6 @@ from random import randint
 from time import sleep
 from pymongo import MongoClient
 from sickle import Sickle
-#import lxml.etree as ET
 
 class JstorHarvester():
     def __init__(self):
@@ -124,9 +123,8 @@ class JstorHarvester():
                 records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':'2023-02-03'})
                 for item in records:
                     current_app.logger.info(item.header.identifier)
-                    current_app.logger.info(type(item.xml))
                     eadid = item.xml.xpath("//ead:eadid", namespaces=ns)[0].text
-                    #with open(harvestDir + "aspace/" + item.header.identifier + ".xml", "w") as f:
+
                     with open(harvestDir + "aspace/" + eadid + ".xml", "w") as f:
                         f.write(item.raw)
 
