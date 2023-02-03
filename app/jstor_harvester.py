@@ -6,6 +6,7 @@ from random import randint
 from time import sleep
 from pymongo import MongoClient
 from sickle import Sickle
+#import lxml.etree as ET
 
 class JstorHarvester():
     def __init__(self):
@@ -51,7 +52,14 @@ class JstorHarvester():
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            self.do_harvest()
+            self.do_harvest('jstorforum')
+
+        aspace = False
+        if 'aspace' in request_json:
+            current_app.logger.info("running aspace harvest")
+            aspace = request_json['aspace']
+        if aspace:
+            self.do_harvest('aspace')
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -59,7 +67,7 @@ class JstorHarvester():
             integration_test = request_json['integration_test']
         if (integration_test):
             current_app.logger.info("running integration test")
-            self.do_harvest(True)
+            self.do_harvest('jstorforum', True)
             try:
                 mongo_url = os.environ.get('MONGO_URL')
                 mongo_dbname = os.environ.get('MONGO_DBNAME')
@@ -81,7 +89,7 @@ class JstorHarvester():
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
-    def do_harvest(self, itest=False):
+    def do_harvest(self, jobname, itest=False):
         if itest:
             configfile = "harvestjobs_test.json"
         else:
@@ -95,7 +103,7 @@ class JstorHarvester():
         #current_app.logger.debug(harvestconfig) 
         harvestDir = os.getenv("jstor_harvest_dir")        
         for job in harvestconfig:     
-            if job["jobName"] == "jstorforum":   
+            if jobname == 'jstorforum' and jobname == job["jobName"]:   
                 for set in job["harvests"]["sets"]:
                     setSpec = "{}".format(set["setSpec"])
                     opDir = set["opDir"]
@@ -103,12 +111,24 @@ class JstorHarvester():
                         os.makedirs(harvestDir + opDir)
                     current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
                     sickle = Sickle(os.getenv("jstor_oai_url"))
-                    
                     records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
                     for item in records:
                         current_app.logger.info(item.header.identifier)
                         with open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w") as f:
                             f.write(item.raw)
+            if jobname == 'aspace' and jobname == job["jobName"]:  
+                ns = {'ead': 'urn:isbn:1-931666-22-9'}
+                sickle = Sickle(os.getenv("aspace_oai_url"))
+                if not os.path.exists(harvestDir + 'aspace'):
+                    os.makedirs(harvestDir + 'aspace')
+                records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':'2023-02-03'})
+                for item in records:
+                    current_app.logger.info(item.header.identifier)
+                    current_app.logger.info(type(item.xml))
+                    eadid = item.xml.xpath("//ead:eadid", namespaces=ns)[0].text
+                    #with open(harvestDir + "aspace/" + item.header.identifier + ".xml", "w") as f:
+                    with open(harvestDir + "aspace/" + eadid + ".xml", "w") as f:
+                        f.write(item.raw)
 
     def revert_task(self, job_ticket_id, task_name):
         return True
