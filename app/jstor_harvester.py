@@ -6,6 +6,7 @@ from random import randint
 from time import sleep
 from pymongo import MongoClient
 from sickle import Sickle
+from datetime import date, timedelta
 
 class JstorHarvester():
     def __init__(self):
@@ -46,20 +47,37 @@ class JstorHarvester():
         current_app.logger.info("Sleep " + str(sleep_s) + " seconds")
         sleep(sleep_s)
 
+        harvestdate = date.today() - timedelta(days = 1)
+        if 'harvesttype' in request_json:
+            if request_json["harvesttype"] == "full":
+                harvestdate = None
+        elif 'harvestdate' in request_json:
+            #to do: check format and throw error if not YYYY-MM-DD
+            harvestdate = request_json["harvestdate"]
+
         jstorforum = False
         if 'jstorforum' in request_json:
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            self.do_harvest()
+            self.do_harvest('jstorforum', harvestdate, "harvestjobs.json")
+
+        aspace = False
+        if 'aspace' in request_json:
+            current_app.logger.info("running aspace harvest")
+            aspace = request_json['aspace']
+        if aspace:
+            self.do_harvest('aspace', harvestdate,  "harvestjobs.json")
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
         if ('integration_test' in request_json):
             integration_test = request_json['integration_test']
         if (integration_test):
-            current_app.logger.info("running integration test")
-            self.do_harvest(True)
+            current_app.logger.info("running integration mongo test")
+            self.do_harvest('jstorforum', None,  "harvestjobs_test.json")
+            #to do - make aspace date configurable, from and until
+            self.do_harvest('aspace', '2023-02-06',  "harvestjobs_test.json")
             try:
                 mongo_url = os.environ.get('MONGO_URL')
                 mongo_dbname = os.environ.get('MONGO_DBNAME')
@@ -81,12 +99,37 @@ class JstorHarvester():
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
-    def do_harvest(self, itest=False):
-        if itest:
+    #def do_harvest(self, jobname, itest=False):
+    def do_harvest(self, jobname, harvestdate, configfile):
+        '''if ('integration_test' in request_json):
+            integration_test = request_json['integration_test']
+        if (integration_test):
+            current_app.logger.info("running integration harvest test")
             configfile = "harvestjobs_test.json"
         else:
             configfile = "harvestjobs.json"
         current_app.logger.info("configfile: " + configfile)
+
+        if 'jstorforum' in request_json:
+            current_app.logger.info("running jstorforum harvest")
+            jstorforum = request_json['jstorforum']
+        if jstorforum:
+            jobname = 'jstorforum'
+
+        aspace = False
+        if 'aspace' in request_json:
+            current_app.logger.info("running aspace harvest")
+            aspace = request_json['aspace']
+        if aspace:
+            jobname = 'aspace'
+
+       harvestdate = date.today() - timedelta(days = 1)
+        if 'harvesttype' in request_json:
+            if request_json["harvesttype"] == "full"
+                harvestdate = None
+        elif 'harvestdate' in request_json:
+            #to do: check format and throw error if not YYYY-MM-DD
+            harvestdate = request_json["harvestdate"]'''
 
         with open(configfile) as f:
             harvjobsjson = f.read()
@@ -95,20 +138,47 @@ class JstorHarvester():
         #current_app.logger.debug(harvestconfig) 
         harvestDir = os.getenv("jstor_harvest_dir")        
         for job in harvestconfig:     
-            if job["jobName"] == "jstorforum":   
+            if jobname == 'jstorforum' and jobname == job["jobName"]:   
                 for set in job["harvests"]["sets"]:
                     setSpec = "{}".format(set["setSpec"])
                     opDir = set["opDir"]
-                    if not os.path.exists(harvestDir + opDir):
-                        os.makedirs(harvestDir + opDir)
+                    if not os.path.exists(harvestDir + opDir + "_oaiwrapped"):
+                        os.makedirs(harvestDir + opDir + "_oaiwrapped")
                     current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
                     sickle = Sickle(os.getenv("jstor_oai_url"))
-                    
-                    records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                    try:
+                        if harvestdate == None:
+                            records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                        else:
+                            records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
+                        for item in records:
+                            current_app.logger.info(item.header.identifier)
+                            with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
+                                f.write(item.raw)
+                    except Exception as e:
+                        #to do: use narrower exception for NoRecordsMatch
+                        current_app.logger.info(e)
+                        current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir)
+            if jobname == 'aspace' and jobname == job["jobName"]:  
+                ns = {'ead': 'urn:isbn:1-931666-22-9'}
+                sickle = Sickle(os.getenv("aspace_oai_url"))
+                if not os.path.exists(harvestDir + 'aspace'):
+                    os.makedirs(harvestDir + 'aspace')
+                try:    
+                    if harvestdate == None:    
+                        records = sickle.ListRecords(metadataPrefix='oai_ead')
+                    else:    
+                        records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate})
                     for item in records:
                         current_app.logger.info(item.header.identifier)
-                        with open(harvestDir + opDir + "/" + item.header.identifier + ".xml", "w") as f:
+                        eadid = item.xml.xpath("//ead:eadid", namespaces=ns)[0].text
+
+                        with open(harvestDir + "aspace/" + eadid + ".xml", "w") as f:
                             f.write(item.raw)
+                except Exception as e:
+                    #to do: use narrower exception for NoRecordsMatch
+                    current_app.logger.info(e)
+                    current_app.logger.info("No records for aspace" )
 
     def revert_task(self, job_ticket_id, task_name):
         return True
