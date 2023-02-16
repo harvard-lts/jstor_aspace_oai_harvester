@@ -139,7 +139,7 @@ class JstorHarvester():
                         records = sickle.ListRecords(metadataPrefix='oai_ead')
                     else:    
                         if configfile == 'harvestjobs_test.json':
-                            records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate, 'until':date.today()})
+                            records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate, 'until': harvestdate + timedelta(days = 1)})
                         else:
                             records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate})
                     for item in records:
