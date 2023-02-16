@@ -99,37 +99,7 @@ class JstorHarvester():
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
-    #def do_harvest(self, jobname, itest=False):
     def do_harvest(self, jobname, harvestdate, configfile):
-        '''if ('integration_test' in request_json):
-            integration_test = request_json['integration_test']
-        if (integration_test):
-            current_app.logger.info("running integration harvest test")
-            configfile = "harvestjobs_test.json"
-        else:
-            configfile = "harvestjobs.json"
-        current_app.logger.info("configfile: " + configfile)
-
-        if 'jstorforum' in request_json:
-            current_app.logger.info("running jstorforum harvest")
-            jstorforum = request_json['jstorforum']
-        if jstorforum:
-            jobname = 'jstorforum'
-
-        aspace = False
-        if 'aspace' in request_json:
-            current_app.logger.info("running aspace harvest")
-            aspace = request_json['aspace']
-        if aspace:
-            jobname = 'aspace'
-
-       harvestdate = date.today() - timedelta(days = 1)
-        if 'harvesttype' in request_json:
-            if request_json["harvesttype"] == "full"
-                harvestdate = None
-        elif 'harvestdate' in request_json:
-            #to do: check format and throw error if not YYYY-MM-DD
-            harvestdate = request_json["harvestdate"]'''
 
         with open(configfile) as f:
             harvjobsjson = f.read()
@@ -168,7 +138,10 @@ class JstorHarvester():
                     if harvestdate == None:    
                         records = sickle.ListRecords(metadataPrefix='oai_ead')
                     else:    
-                        records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate})
+                        if configfile == 'harvestjobs_test.json':
+                            records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate, 'until':date.today()})
+                        else:
+                            records = sickle.ListRecords(**{'metadataPrefix':'oai_ead', 'from':harvestdate})
                     for item in records:
                         current_app.logger.info(item.header.identifier)
                         eadid = item.xml.xpath("//ead:eadid", namespaces=ns)[0].text
