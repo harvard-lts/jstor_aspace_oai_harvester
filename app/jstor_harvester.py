@@ -60,19 +60,23 @@ class JstorHarvester():
             #to do: check format and throw error if not YYYY-MM-DD
             harvestdate = request_json["harvestdate"]
 
+        harvestset = None
+        if 'harvestset' in request_json:
+            harvestset = request_json["harvestset"]
+
         jstorforum = False
         if 'jstorforum' in request_json:
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            self.do_harvest('jstorforum', harvestdate, "harvestjobs.json", job_ticket_id)
+            self.do_harvest('jstorforum', harvestdate, harvestset, "harvestjobs.json", job_ticket_id)
 
         aspace = False
         if 'aspace' in request_json:
             current_app.logger.info("running aspace harvest")
             aspace = request_json['aspace']
         if aspace:
-            self.do_harvest('aspace', harvestdate,  "harvestjobs.json", job_ticket_id)
+            self.do_harvest('aspace', harvestdate, None,  "harvestjobs.json", job_ticket_id)
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -80,9 +84,9 @@ class JstorHarvester():
             integration_test = request_json['integration_test']
         if (integration_test):
             current_app.logger.info("running integration mongo test")
-            self.do_harvest('jstorforum', None,  "harvestjobs_test.json", job_ticket_id)
+            self.do_harvest('jstorforum', None, None,  "harvestjobs_test.json", job_ticket_id)
             #to do - make aspace date configurable, from and until
-            self.do_harvest('aspace', '2023-02-06',  "harvestjobs_test.json", job_ticket_id)
+            self.do_harvest('aspace', '2023-02-06', None,  "harvestjobs_test.json", job_ticket_id)
             try:
                 mongo_url = os.environ.get('MONGO_URL')
                 mongo_dbname = os.environ.get('MONGO_DBNAME')
@@ -103,7 +107,7 @@ class JstorHarvester():
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
-    def do_harvest(self, jobname, harvestdate, configfile, job_ticket_id):
+    def do_harvest(self, jobname, harvestdate, harvestset, configfile, job_ticket_id):
 
         with open(configfile) as f:
             harvjobsjson = f.read()
@@ -127,45 +131,87 @@ class JstorHarvester():
 
         harvestDir = os.getenv("jstor_harvest_dir") + "/"        
         for job in harvestconfig:     
-            if jobname == 'jstorforum' and jobname == job["jobName"]:   
+            if jobname == 'jstorforum' and jobname == job["jobName"]:  
                 for set in job["harvests"]["sets"]:
                     setSpec = "{}".format(set["setSpec"])
                     repository_name = self.repositories[setSpec]
                     opDir = set["opDir"]
                     totalHarvestCount = 0
-                    if not os.path.exists(harvestDir + opDir + "_oaiwrapped"):
-                        os.makedirs(harvestDir + opDir + "_oaiwrapped")
-                    current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
-                    sickle = Sickle(os.getenv("jstor_oai_url"))
-                    try:
-                        if harvestdate == None:
-                            records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
-                        else:
-                            records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 
-                                'from':harvestdate, 'set':setSpec})
-                        for item in records:
-                            current_app.logger.info(item.header.identifier)
-                            with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
-                                f.write(item.raw)
-                            #add record to mongo
-                            try:
-                                status = "add"
-                                self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
-                                    status, record_collection_name, mongo_db)
-                                totalHarvestCount = totalHarvestCount + 1    
-                            except Exception as e:
-                                current_app.logger.error(e)
-                                current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier)
-                    except Exception as e:
-                        #to do: use narrower exception for NoRecordsMatch
-                        current_app.logger.error(e)
-                        current_app.logger.error("No records for: " + setSpec + ", output dir: " + opDir)
-                    try:
-                        self.write_harvest(job_ticket_id, harvestdate, setSpec, 
-                            repository_name, totalHarvestCount, harvest_collection_name, mongo_db)
-                    except Exception as e:
-                        current_app.logger.error(e)
-                        current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)
+
+                    if harvestset is None:
+                        if not os.path.exists(harvestDir + opDir + "_oaiwrapped"):
+                            os.makedirs(harvestDir + opDir + "_oaiwrapped")
+                        current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
+                        sickle = Sickle(os.getenv("jstor_oai_url"))
+                        try:
+                            if harvestdate == None:
+                                records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                            else:
+                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
+                            for item in records:
+                                current_app.logger.info(item.header.identifier)
+                                with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
+                                    f.write(item.raw)
+                                try:
+                                    status = "add"
+                                    self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
+                                        status, record_collection_name, mongo_db)
+                                    totalHarvestCount = totalHarvestCount + 1    
+                                except Exception as e:
+                                    current_app.logger.error(e)
+                                    current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier)
+                        except Exception as e:
+                            #to do: use narrower exception for NoRecordsMatch
+                            current_app.logger.info(e)
+                            if str(e) == "No Records Match":
+                                current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir)
+                            else:
+                                current_app.logger.info("Error harvesting")  
+                        try:
+                            self.write_harvest(job_ticket_id, harvestdate, setSpec, 
+                                repository_name, totalHarvestCount, harvest_collection_name, mongo_db)
+                        except Exception as e:
+                            current_app.logger.error(e)
+                            current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)        
+
+                                
+                    elif  setSpec == harvestset:
+                        current_app.logger.info("Harvesting for one set only: " + setSpec)        
+                        if not os.path.exists(harvestDir + opDir + "_oaiwrapped"):
+                            os.makedirs(harvestDir + opDir + "_oaiwrapped")
+                        current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
+                        sickle = Sickle(os.getenv("jstor_oai_url"))
+                        try:
+                            if harvestdate == None:
+                                records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                            else:
+                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
+                            for item in records:
+                                current_app.logger.info(item.header.identifier)
+                                with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
+                                    f.write(item.raw)
+                                try:
+                                    status = "add"
+                                    self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
+                                        status, record_collection_name, mongo_db)
+                                    totalHarvestCount = totalHarvestCount + 1    
+                                except Exception as e:
+                                    current_app.logger.error(e)
+                                    current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier)    
+                        except Exception as e:
+                            #to do: use narrower exception for NoRecordsMatch
+                            current_app.logger.info(e)
+                            if str(e) == "No Records Match":
+                                current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir)
+                            else:
+                                current_app.logger.info("Error harvesting")    
+                        try:
+                            self.write_harvest(job_ticket_id, harvestdate, setSpec, 
+                                repository_name, totalHarvestCount, harvest_collection_name, mongo_db)
+                        except Exception as e:
+                            current_app.logger.error(e)
+                            current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)
+
 
             if jobname == 'aspace' and jobname == job["jobName"]:  
                 ns = {'ead': 'urn:isbn:1-931666-22-9'}
