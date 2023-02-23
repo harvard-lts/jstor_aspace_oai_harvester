@@ -130,7 +130,7 @@ class JstorHarvester():
             if jobname == 'jstorforum' and jobname == job["jobName"]:   
                 for set in job["harvests"]["sets"]:
                     setSpec = "{}".format(set["setSpec"])
-                    repository_name = self.repositories[713]
+                    repository_name = self.repositories[setSpec]
                     opDir = set["opDir"]
                     totalHarvestCount = 0
                     if not os.path.exists(harvestDir + opDir + "_oaiwrapped"):
