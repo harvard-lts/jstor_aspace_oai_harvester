@@ -267,7 +267,9 @@ class JstorHarvester():
             repos = repository_collection.find({})
             for r in repos:
                 k = r["_id"]
+                current_app.logger.info(k)
                 v = r["displayname"]
+                current_app.logger.info(v)
                 repositories[k] = v 
             mongo_client.close()
             return repositories
