@@ -288,7 +288,7 @@ class JstorHarvester():
             if harvest_date == None: #set harvest date to today if harvest date is None
                 harvest_date = datetime.today().strftime('%Y-%m-%d')  
             harvest_date_obj = datetime.strptime(harvest_date, "%Y-%m-%d")
-            harvest_record = { "id": harvest_id, "last_update": harvest_date_obj, "record_id": record_id, 
+            harvest_record = { "harvest_id": harvest_id, "last_update": harvest_date_obj, "record_id": record_id, 
                 "repository_id": repository_id, "repository_name": repository_name, 
                 "status": status, "harvested": True, "transformed": False, "published": False }
             record_collection = mongo_db[collection_name]
