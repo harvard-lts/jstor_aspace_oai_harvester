@@ -118,7 +118,7 @@ class JstorHarvester():
         mongo_dbname = os.environ.get('MONGO_DBNAME')
         harvest_collection_name = os.environ.get('HARVEST_COLLECTION', 'jstor_harvests')
         repository_collection_name = os.environ.get('REPOSITORY_COLLECTION', 'jstor_repositories')
-        record_collection_name = os.environ.get('RECORD_COLLECTION', 'jstor_records')
+        record_collection_name = os.environ.get('JSTOR_HARVESTED_RECORDS', 'jstor_harvested_records')
         mongo_url = os.environ.get('MONGO_URL')
         mongo_client = None
         mongo_db = None
