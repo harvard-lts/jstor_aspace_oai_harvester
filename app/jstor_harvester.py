@@ -288,12 +288,13 @@ class JstorHarvester():
 
     def write_record(self, harvest_id, record_id, harvest_date, repository_id, repository_name,
             status, collection_name, success, mongo_db, error=None):
+        err_msg = ""
         if mongo_db == None:
             current_app.logger.info("Error: mongo db not instantiated")
             return
         try:
             if error != None:
-                    err_msg = error
+                err_msg = error
             if harvest_date == None: #set harvest date to today if harvest date is None
                 harvest_date = datetime.today().strftime('%Y-%m-%d')  
             harvest_date_obj = datetime.strptime(harvest_date, "%Y-%m-%d")
