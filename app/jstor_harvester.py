@@ -1,6 +1,5 @@
 import sys, os, os.path, json, requests, traceback, time
 from tenacity import retry, retry_if_result, wait_random_exponential, retry_if_not_exception_type
-from datetime import datetime
 from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
@@ -150,6 +149,8 @@ class JstorHarvester():
                         try:
                             if harvestdate == None:
                                 records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                                #if not last_harvest_successful(harvestdate, setSpec):
+                                    #harvestdate = get_last_successful_harvest(setSpec)
                             else:
                                 records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
                             for item in records:
