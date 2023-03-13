@@ -160,7 +160,7 @@ class JstorHarvester():
                                     rec = coll.find({"repository_id":"713", "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
                                     if rec is not None:
                                         lastsuccessfuldate = rec[0]['harvest_date'] 
-                                        if harvestdate.strftime('%Y-%m-%d') != lastsuccessfuldate.strftime('%Y-%m-%d'):
+                                        if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
                                             current_app.logger.info("Trying reharvest from: " + lastsuccessfuldate.strftime('%Y-%m-%d'))
                                             harvestdate = lastsuccessfuldate.strftime('%Y-%m-%d')
 
@@ -210,7 +210,7 @@ class JstorHarvester():
                                     rec = coll.find({"repository_id":"713", "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
                                     if rec is not None:
                                         lastsuccessfuldate = rec[0]['harvest_date'] 
-                                        if harvestdate.strftime('%Y-%m-%d') != lastsuccessfuldate.strftime('%Y-%m-%d'):
+                                        if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
                                             current_app.logger.info("Trying reharvest from: " + lastsuccessfuldate.strftime('%Y-%m-%d'))
                                             harvestdate = lastsuccessfuldate.strftime('%Y-%m-%d') 
                                 records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
