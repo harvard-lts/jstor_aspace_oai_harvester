@@ -51,3 +51,11 @@ def define_resources(app):
                 ticket_id = 'job: '+ str(item)
                 celery.execute.send_task("tasks.tasks.do_task", args=[{'job_ticket_id': ticket_id}], kwargs={}, queue=os.getenv('QUEUE_NAME'))
             return str(batchSize) + " jobs started..." + str(type(batchSize))
+
+    # Heartbeat/health check route  
+    @iiif.route('/healthcheck', endpoint="healthcheck")
+    class Healthcheck(Resource):
+        def get(self):
+            worker = jstor_harvester.JstorHarvester()
+            healthcheck = worker.healthcheck()
+            return {"system": healthcheck}
