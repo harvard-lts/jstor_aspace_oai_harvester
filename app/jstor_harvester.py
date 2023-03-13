@@ -1,6 +1,5 @@
 import sys, os, os.path, json, requests, traceback, time
 from tenacity import retry, retry_if_result, wait_random_exponential, retry_if_not_exception_type
-from datetime import datetime
 from flask import Flask, request, jsonify, current_app, make_response
 from random import randint
 from time import sleep
@@ -125,6 +124,11 @@ class JstorHarvester():
         mongo_url = os.environ.get('MONGO_URL')
         mongo_client = None
         mongo_db = None
+
+        check_last_successful = False
+        if os.environ.get('CHECK_LAST_SUCCESSFUL') == 'true':
+            check_last_successful = True
+
         try:
             mongo_client = MongoClient(mongo_url, maxPoolSize=1)
             mongo_db = mongo_client[mongo_dbname]
@@ -148,10 +152,20 @@ class JstorHarvester():
                         current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
                         sickle = Sickle(os.getenv("jstor_oai_url"))
                         try:
-                            if harvestdate == None:
+                            if harvestdate == None: # must be a full harvest
                                 records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
                             else:
-                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
+                                if check_last_successful:
+                                    coll= mongo_db[harvest_collection_name]
+                                    rec = coll.find({"repository_id":"713", "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
+                                    if rec is not None:
+                                        lastsuccessfuldate = rec[0]['harvest_date'] 
+                                        if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
+                                            current_app.logger.info("Trying reharvest from: " + lastsuccessfuldate.strftime('%Y-%m-%d'))
+                                            harvestdate = lastsuccessfuldate.strftime('%Y-%m-%d')
+
+                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
+                                
                             for item in records:
                                 current_app.logger.info(item.header.identifier)
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
@@ -187,10 +201,19 @@ class JstorHarvester():
                         current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
                         sickle = Sickle(os.getenv("jstor_oai_url"))
                         try:
-                            if harvestdate == None:
+                            if harvestdate == None: # must be a full harvest
                                 records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
                             else:
-                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
+                                current_app.logger.info(check_last_successful)
+                                if check_last_successful:
+                                    coll= mongo_db[harvest_collection_name]
+                                    rec = coll.find({"repository_id":"713", "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
+                                    if rec is not None:
+                                        lastsuccessfuldate = rec[0]['harvest_date'] 
+                                        if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
+                                            current_app.logger.info("Trying reharvest from: " + lastsuccessfuldate.strftime('%Y-%m-%d'))
+                                            harvestdate = lastsuccessfuldate.strftime('%Y-%m-%d') 
+                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
                             for item in records:
                                 current_app.logger.info(item.header.identifier)
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
