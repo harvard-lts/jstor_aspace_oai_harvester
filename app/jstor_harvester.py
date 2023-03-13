@@ -149,10 +149,10 @@ class JstorHarvester():
                         try:
                             if harvestdate == None:
                                 records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
-                                #if not last_harvest_successful(harvestdate, setSpec):
-                                    #harvestdate = get_last_successful_harvest(setSpec)
                             else:
-                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec})     
+                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
+                                #if os.getenv("CHECK_LAST_SUCCESSFUL")
+                                #    harvestdate =     
                             for item in records:
                                 current_app.logger.info(item.header.identifier)
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
