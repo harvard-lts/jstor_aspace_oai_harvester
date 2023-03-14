@@ -157,7 +157,7 @@ class JstorHarvester():
                             else:
                                 if check_last_successful:
                                     coll= mongo_db[harvest_collection_name]
-                                    rec = coll.find({"repository_id":"713", "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
+                                    rec = coll.find({"repository_id":setSpec, "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
                                     if rec is not None:
                                         lastsuccessfuldate = rec[0]['harvest_date'] 
                                         if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
@@ -207,7 +207,7 @@ class JstorHarvester():
                                 current_app.logger.info(check_last_successful)
                                 if check_last_successful:
                                     coll= mongo_db[harvest_collection_name]
-                                    rec = coll.find({"repository_id":"713", "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
+                                    rec = coll.find({"repository_id":setSpec, "success":True}, {"harvest_date":1}).sort("harvest_date", -1).limit(1)
                                     if rec is not None:
                                         lastsuccessfuldate = rec[0]['harvest_date'] 
                                         if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
