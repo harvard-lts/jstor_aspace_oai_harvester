@@ -1,7 +1,7 @@
 aniso8601==9.0.1
 attrs==21.2.0
 celery
-certifi==2021.10.8
+certifi==2022.12.7
 chardet==4.0.0
 click==8.0.3
 docopt==0.6.2
@@ -32,4 +32,4 @@ tenacity==8.0.1
 toml==0.10.2
 urllib3==1.26.6
 uuid==1.30
-Werkzeug==2.0.2
+Werkzeug==2.2.23
