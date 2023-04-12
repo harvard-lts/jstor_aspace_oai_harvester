@@ -282,7 +282,7 @@ class JstorHarvester():
                     current_app.logger.info("No records for aspace" )
                     harvest_successful = False 
                 try:
-                    self.write_harvest(job_ticket_id, harvestdate, "0000", "aspace", "ASP"
+                    self.write_harvest(job_ticket_id, harvestdate, "0000", "aspace", "ASP", 
                         totalAspaceHarvestCount, harvest_collection_name, mongo_db, "aspace", harvest_successful)
                 except Exception as e:
                     current_app.logger.error(e)
