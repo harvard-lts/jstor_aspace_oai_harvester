@@ -311,7 +311,7 @@ class JstorHarvester():
             current_app.logger.info("Error: unable to connect to mongodb, {}", err)
         return
 
-    def write_record(self, harvest_id, record_id, harvest_date, repository_id, repository_name,
+    def write_record(self, harvest_id, record_id, harvest_date, repository_id, repository_name, repo_short_name, 
             status, collection_name, success, mongo_db, error=None):
         err_msg = ""
         if mongo_db == None:
