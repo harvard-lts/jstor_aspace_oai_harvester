@@ -141,7 +141,8 @@ class JstorHarvester():
             if jobname == 'jstorforum' and jobname == job["jobName"]:  
                 for set in job["harvests"]["sets"]:
                     setSpec = "{}".format(set["setSpec"])
-                    repository_name = self.repositories[setSpec]
+                    repository_name = self.repositories[setSpec]["displayname"]
+                    repo_short_name = self.repositories[setSpec]["shortname"]
                     opDir = set["opDir"]
                     totalHarvestCount = 0
                     harvest_successful = True
@@ -171,9 +172,9 @@ class JstorHarvester():
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
                                     f.write(item.raw)
                                 try:
-                                    status = "add"
+                                    status = "add_update"
                                     self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
-                                        status, record_collection_name, True, mongo_db)
+                                        repo_short_name, status, record_collection_name, True, mongo_db)
                                     totalHarvestCount = totalHarvestCount + 1    
                                 except Exception as e:
                                     current_app.logger.error(e)
@@ -188,7 +189,7 @@ class JstorHarvester():
                                 harvest_successful = False  
                         try:
                             self.write_harvest(job_ticket_id, harvestdate, setSpec, 
-                                repository_name, totalHarvestCount, harvest_collection_name, mongo_db, jobname, harvest_successful)
+                                repository_name, repo_short_name, totalHarvestCount, harvest_collection_name, mongo_db, jobname, harvest_successful)
                         except Exception as e:
                             current_app.logger.error(e)
                             current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)        
@@ -219,9 +220,9 @@ class JstorHarvester():
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
                                     f.write(item.raw)
                                 try:
-                                    status = "add"
+                                    status = "add_update"
                                     self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
-                                        status, record_collection_name, True, mongo_db)
+                                        repo_short_name, status, record_collection_name, True, mongo_db)
                                     totalHarvestCount = totalHarvestCount + 1    
                                 except Exception as e:
                                     current_app.logger.error(e)
@@ -236,7 +237,7 @@ class JstorHarvester():
                                 harvest_successful = False    
                         try:
                             self.write_harvest(job_ticket_id, harvestdate, setSpec, 
-                                repository_name, totalHarvestCount, harvest_collection_name, mongo_db, jobname, harvest_successful)
+                                repository_name, repo_short_name, totalHarvestCount, harvest_collection_name, mongo_db, jobname, harvest_successful)
                         except Exception as e:
                             current_app.logger.error(e)
                             current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)
@@ -269,8 +270,8 @@ class JstorHarvester():
                         totalAspaceHarvestCount = totalAspaceHarvestCount + 1
                         #add record to mongo
                         try:
-                            status = "add"
-                            self.write_record(job_ticket_id, item.header.identifier, harvestdate, "0000", "aspace", 
+                            status = "add_update"
+                            self.write_record(job_ticket_id, item.header.identifier, harvestdate, "0000", "aspace", "ASP",
                                 status, record_collection_name, True, mongo_db)
                         except Exception as e:
                                 current_app.logger.error(e)
@@ -281,7 +282,7 @@ class JstorHarvester():
                     current_app.logger.info("No records for aspace" )
                     harvest_successful = False 
                 try:
-                    self.write_harvest(job_ticket_id, harvestdate, "0000", "aspace", 
+                    self.write_harvest(job_ticket_id, harvestdate, "0000", "aspace", "ASP", 
                         totalAspaceHarvestCount, harvest_collection_name, mongo_db, "aspace", harvest_successful)
                 except Exception as e:
                     current_app.logger.error(e)
@@ -290,7 +291,7 @@ class JstorHarvester():
         if (mongo_client is not None):            
             mongo_client.close()
 
-    def write_harvest(self, harvest_id, harvest_date, repository_id, repository_name,
+    def write_harvest(self, harvest_id, harvest_date, repository_id, repository_name, repo_short_name, 
             total_harvested, collection_name, mongo_db, jobname, success):
         if mongo_db == None:
             current_app.logger.info("Error: mongo db not instantiated")
@@ -301,7 +302,7 @@ class JstorHarvester():
             harvest_date_obj = datetime.strptime(harvest_date, "%Y-%m-%d")
             last_update = datetime.now()
             harvest_record = { "id": harvest_id, "last_update": last_update, "harvest_date": harvest_date_obj, 
-                "repository_id": repository_id, "repository_name": repository_name, 
+                "repository_id": repository_id, "repository_name": repository_name, "repo_short_name": repo_short_name, 
                 "total_harvest_count": total_harvested, "jobname": jobname, "success": success }
             harvest_collection = mongo_db[collection_name]
             harvest_collection.insert_one(harvest_record)
@@ -310,7 +311,7 @@ class JstorHarvester():
             current_app.logger.info("Error: unable to connect to mongodb, {}", err)
         return
 
-    def write_record(self, harvest_id, record_id, harvest_date, repository_id, repository_name,
+    def write_record(self, harvest_id, record_id, harvest_date, repository_id, repository_name, repo_short_name, 
             status, collection_name, success, mongo_db, error=None):
         err_msg = ""
         if mongo_db == None:
@@ -324,7 +325,7 @@ class JstorHarvester():
             harvest_date_obj = datetime.strptime(harvest_date, "%Y-%m-%d")
             last_update = datetime.now()
             harvest_record = { "harvest_id": harvest_id, "last_update": last_update, "harvest_date": harvest_date_obj, "record_id": record_id, 
-                "repository_id": repository_id, "repository_name": repository_name, 
+                "repository_id": repository_id, "repository_name": repository_name, "repo_short_name": repo_short_name, 
                 "status": status, "success": success, "error": err_msg }
             record_collection = mongo_db[collection_name]
             record_collection.insert_one(harvest_record)
@@ -348,7 +349,7 @@ class JstorHarvester():
             repos = repository_collection.find({})
             for r in repos:
                 k = r["_id"]
-                v = r["displayname"]
+                v = { "displayname": r["displayname"], "shortname": r["shortname"] }
                 repositories[k] = v 
             mongo_client.close()
             return repositories
