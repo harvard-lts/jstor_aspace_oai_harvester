@@ -54,7 +54,8 @@ class JstorHarvester():
         #dump json
         current_app.logger.info("json message: " + json.dumps(request_json))
 
-        harvestdate = date.today() - timedelta(days = 1)
+        harvestdate_datetime = date.today() - timedelta(days = 1)
+        harvestdate = harvestdate_datetime.strftime('%Y-%m-%d')
         if 'harvesttype' in request_json:
             if request_json["harvesttype"] == "full":
                 harvestdate = None
