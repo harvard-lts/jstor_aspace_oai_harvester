@@ -173,7 +173,7 @@ class JstorHarvester():
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
                                     f.write(item.raw)
                                 try:
-                                    status = "add_update"
+                                    status = "harvested"
                                     self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
                                         repo_short_name, status, record_collection_name, True, mongo_db)
                                     totalHarvestCount = totalHarvestCount + 1    
@@ -221,7 +221,7 @@ class JstorHarvester():
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
                                     f.write(item.raw)
                                 try:
-                                    status = "add_update"
+                                    status = "harvested"
                                     self.write_record(job_ticket_id, item.header.identifier, harvestdate, setSpec, repository_name, 
                                         repo_short_name, status, record_collection_name, True, mongo_db)
                                     totalHarvestCount = totalHarvestCount + 1    
@@ -271,7 +271,7 @@ class JstorHarvester():
                         totalAspaceHarvestCount = totalAspaceHarvestCount + 1
                         #add record to mongo
                         try:
-                            status = "add_update"
+                            status = "harvested"
                             self.write_record(job_ticket_id, item.header.identifier, harvestdate, "0000", "aspace", "ASP",
                                 status, record_collection_name, True, mongo_db)
                         except Exception as e:
