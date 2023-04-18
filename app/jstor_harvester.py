@@ -88,6 +88,8 @@ class JstorHarvester():
         if (integration_test):
             current_app.logger.info("running integration mongo test")
             self.do_harvest('jstorforum', None, None,  "harvestjobs_test.json", job_ticket_id)
+            # a second call for testing exception and mongo error
+            self.do_harvest('jstorforum', None, None,  "harvestjobs_test.json", job_ticket_id + "_error", True)
             #to do - make aspace date configurable, from and until
             self.do_harvest('aspace', '2023-02-06', None,  "harvestjobs_test.json", job_ticket_id)
             try:
@@ -110,7 +112,7 @@ class JstorHarvester():
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
-    def do_harvest(self, jobname, harvestdate, harvestset, configfile, job_ticket_id):
+    def do_harvest(self, jobname, harvestdate, harvestset, configfile, job_ticket_id, errortest=False):
 
         with open(configfile) as f:
             harvjobsjson = f.read()
@@ -154,6 +156,8 @@ class JstorHarvester():
                         current_app.logger.info("Harvesting set:" + setSpec + ", output dir: " + opDir)
                         sickle = Sickle(os.getenv("jstor_oai_url"))
                         try:
+                            if errortest:
+                                sickle = Sickle(os.getenv("oai_error_url"))
                             if harvestdate == None: # must be a full harvest
                                 records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
                             else:
