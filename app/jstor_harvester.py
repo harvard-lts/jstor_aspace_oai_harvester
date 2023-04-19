@@ -105,7 +105,7 @@ class JstorHarvester():
                 integration_collection.insert_one(test_record)
                 mongo_client.close()
             except Exception as err:
-                current_app.logger.error("Error: unable to connect to mongodb, {}", err)
+                current_app.logger.error("Error: unable to connect to mongodb", exc_info=True)
                 
         result['success'] = True
         # altered line so we can see request json coming through properly
@@ -136,7 +136,7 @@ class JstorHarvester():
             mongo_client = MongoClient(mongo_url, maxPoolSize=1)
             mongo_db = mongo_client[mongo_dbname]
         except Exception as err:
-            current_app.logger.error("Error: unable to connect to mongodb, {}", err)
+            current_app.logger.error("Error: unable to connect to mongodb", exc_info=True)
                                                                                               
 
         harvestDir = os.getenv("jstor_harvest_dir") + "/"        
@@ -182,22 +182,19 @@ class JstorHarvester():
                                         repo_short_name, status, record_collection_name, True, mongo_db)
                                     totalHarvestCount = totalHarvestCount + 1    
                                 except Exception as e:
-                                    current_app.logger.error(e)
-                                    current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier)
+                                    current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier, exc_info=True)
                         except Exception as e:
                             #to do: use narrower exception for NoRecordsMatch
-                            current_app.logger.info(e)
                             if str(e) == "No Records Match":
-                                current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir)
+                                current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir, exc_info=True)
                             else:
-                                current_app.logger.info("Error harvesting")
+                                current_app.logger.info("Error harvesting", exc_info=True)
                                 harvest_successful = False  
                         try:
                             self.write_harvest(job_ticket_id, harvestdate, setSpec, 
                                 repository_name, repo_short_name, totalHarvestCount, harvest_collection_name, mongo_db, jobname, harvest_successful)
                         except Exception as e:
-                            current_app.logger.error(e)
-                            current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)        
+                            current_app.logger.error("Mongo error writing harvest record for : " +  setSpec, exc_info=True)       
 
                                 
                     elif  setSpec == harvestset:
@@ -230,13 +227,11 @@ class JstorHarvester():
                                         repo_short_name, status, record_collection_name, True, mongo_db)
                                     totalHarvestCount = totalHarvestCount + 1    
                                 except Exception as e:
-                                    current_app.logger.error(e)
-                                    current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier)    
+                                    current_app.logger.error("Mongo error writing " + setSpec + " record: " +  item.header.identifier, exc_info=True)    
                         except Exception as e:
                             #to do: use narrower exception for NoRecordsMatch
-                            current_app.logger.info(e)
                             if str(e) == "No Records Match":
-                                current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir)
+                                current_app.logger.info("No records for: " + setSpec + ", output dir: " + opDir, exc_info=True)
                             else:
                                 current_app.logger.info("Error harvesting: " + str(e))
                                 harvest_successful = False    
@@ -244,8 +239,7 @@ class JstorHarvester():
                             self.write_harvest(job_ticket_id, harvestdate, setSpec, 
                                 repository_name, repo_short_name, totalHarvestCount, harvest_collection_name, mongo_db, jobname, harvest_successful)
                         except Exception as e:
-                            current_app.logger.error(e)
-                            current_app.logger.error("Mongo error writing harvest record for : " +  setSpec)
+                            current_app.logger.error("Mongo error writing harvest record for : " +  setSpec, exc_info=True)
 
 
             if jobname == 'aspace' and jobname == job["jobName"]:  
@@ -279,19 +273,16 @@ class JstorHarvester():
                             self.write_record(job_ticket_id, item.header.identifier, harvestdate, "0000", "aspace", "ASP",
                                 status, record_collection_name, True, mongo_db)
                         except Exception as e:
-                                current_app.logger.error(e)
-                                current_app.logger.error("Mongo error writing aspace record: " + eadid)
+                                current_app.logger.error("Mongo error writing aspace record: " + eadid, exc_info=True)
                 except Exception as e:
                     #to do: use narrower exception for NoRecordsMatch
-                    current_app.logger.info(e)
-                    current_app.logger.info("No records for aspace" )
+                    current_app.logger.info("No records for aspace", exc_info=True)
                     harvest_successful = False 
                 try:
                     self.write_harvest(job_ticket_id, harvestdate, "0000", "aspace", "ASP", 
                         totalAspaceHarvestCount, harvest_collection_name, mongo_db, "aspace", harvest_successful)
                 except Exception as e:
-                    current_app.logger.error(e)
-                    current_app.logger.error("Mongo error writing harvest record for : aspace")
+                    current_app.logger.error("Mongo error writing harvest record for : aspace", exc_info=True)
 
         if (mongo_client is not None):            
             mongo_client.close()
@@ -313,7 +304,7 @@ class JstorHarvester():
             harvest_collection.insert_one(harvest_record)
             current_app.logger.info(repository_name + " harvest for " + harvest_date + " written to mongo ")
         except Exception as err:
-            current_app.logger.info("Error: unable to connect to mongodb, {}", err)
+            current_app.logger.info("Error: unable to connect to mongodb", exc_info=True)
         return
 
     def write_record(self, harvest_id, record_id, harvest_date, repository_id, repository_name, repo_short_name, 
@@ -336,7 +327,7 @@ class JstorHarvester():
             record_collection.insert_one(harvest_record)
             current_app.logger.info("record " + str(record_id) + " of repo " + str(repository_id) + " written to mongo ")
         except Exception as err:
-            current_app.logger.info("Error: unable to connect to mongodb, {}", err)
+            current_app.logger.info("Error: unable to connect to mongodb", exc_info=True)
         return
 
     def load_repositories(self):
@@ -359,7 +350,7 @@ class JstorHarvester():
             mongo_client.close()
             return repositories
         except Exception as err:
-            current_app.logger.info("Error: unable to load repository table from mongodb, {}", err)
+            current_app.logger.info("Error: unable to load repository table from mongodb", exc_info=True)
             return repositories
 
     #add more sophisticated healthchecking later
