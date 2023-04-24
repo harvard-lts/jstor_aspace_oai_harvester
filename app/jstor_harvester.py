@@ -63,6 +63,10 @@ class JstorHarvester():
             #to do: check format and throw error if not YYYY-MM-DD
             harvestdate = request_json["harvestdate"]
 
+        untildate = None
+        if 'untildate' in request_json:
+            untildate = request_json["untildate"]
+
         harvestset = None
         if 'harvestset' in request_json:
             harvestset = request_json["harvestset"]
@@ -72,14 +76,14 @@ class JstorHarvester():
             current_app.logger.info("running jstorforum harvest")
             jstorforum = request_json['jstorforum']
         if jstorforum:
-            self.do_harvest('jstorforum', harvestdate, harvestset, "harvestjobs.json", job_ticket_id)
+            self.do_harvest('jstorforum', harvestdate, untildate, harvestset, "harvestjobs.json", job_ticket_id)
 
         aspace = False
         if 'aspace' in request_json:
             current_app.logger.info("running aspace harvest")
             aspace = request_json['aspace']
         if aspace:
-            self.do_harvest('aspace', harvestdate, None,  "harvestjobs.json", job_ticket_id)
+            self.do_harvest('aspace', harvestdate, None, "harvestjobs.json", job_ticket_id)
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -87,11 +91,11 @@ class JstorHarvester():
             integration_test = request_json['integration_test']
         if (integration_test):
             current_app.logger.info("running integration mongo test")
-            self.do_harvest('jstorforum', None, None,  "harvestjobs_test.json", job_ticket_id)
+            self.do_harvest('jstorforum', None, None, None, "harvestjobs_test.json", job_ticket_id)
             # a second call for testing exception and mongo error
-            self.do_harvest('jstorforum', None, None,  "harvestjobs_test.json", job_ticket_id + "_error", True)
+            self.do_harvest('jstorforum', None, None, None, "harvestjobs_test.json", job_ticket_id + "_error", True)
             #to do - make aspace date configurable, from and until
-            self.do_harvest('aspace', '2023-02-06', None,  "harvestjobs_test.json", job_ticket_id)
+            self.do_harvest('aspace', '2023-02-06', None, "harvestjobs_test.json", job_ticket_id)
             try:
                 mongo_url = os.environ.get('MONGO_URL')
                 mongo_dbname = os.environ.get('MONGO_DBNAME')
@@ -112,7 +116,7 @@ class JstorHarvester():
         result['message'] = 'Job ticket id {} has completed '.format(request_json['job_ticket_id'])
         return result
 
-    def do_harvest(self, jobname, harvestdate, harvestset, configfile, job_ticket_id, errortest=False):
+    def do_harvest(self, jobname, harvestdate, untildate, harvestset, configfile, job_ticket_id, errortest=False):
 
         with open(configfile) as f:
             harvjobsjson = f.read()
@@ -159,7 +163,10 @@ class JstorHarvester():
                             if errortest:
                                 sickle = Sickle(os.getenv("oai_error_url"))
                             if harvestdate == None: # must be a full harvest
-                                records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                                if untildate == None:
+                                    records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                                else:
+                                    records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'until':untildate, 'set':setSpec})
                             else:
                                 if check_last_successful:
                                     coll= mongo_db[harvest_collection_name]
@@ -169,9 +176,11 @@ class JstorHarvester():
                                         if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
                                             current_app.logger.info("Trying reharvest from: " + lastsuccessfuldate.strftime('%Y-%m-%d'))
                                             harvestdate = lastsuccessfuldate.strftime('%Y-%m-%d')
+                                if untildate == None:            
+                                    records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
+                                else:
+                                    records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'until':untildate, 'set':setSpec})   
 
-                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
-                                
                             for item in records:
                                 current_app.logger.info(item.header.identifier)
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
@@ -205,7 +214,10 @@ class JstorHarvester():
                         sickle = Sickle(os.getenv("jstor_oai_url"))
                         try:
                             if harvestdate == None: # must be a full harvest
-                                records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                                if untildate == None:
+                                    records = sickle.ListRecords(metadataPrefix='oai_ssio', set=setSpec)
+                                else:
+                                    records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'until':untildate, 'set':setSpec})        
                             else:
                                 current_app.logger.info(check_last_successful)
                                 if check_last_successful:
@@ -216,7 +228,10 @@ class JstorHarvester():
                                         if harvestdate.strftime('%Y-%m-%d') > lastsuccessfuldate.strftime('%Y-%m-%d'):
                                             current_app.logger.info("Trying reharvest from: " + lastsuccessfuldate.strftime('%Y-%m-%d'))
                                             harvestdate = lastsuccessfuldate.strftime('%Y-%m-%d') 
-                                records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
+                                if untildate == None:            
+                                    records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'set':setSpec}) 
+                                else:
+                                    records = sickle.ListRecords(**{'metadataPrefix':'oai_ssio', 'from':harvestdate, 'until':untildate, 'set':setSpec})    
                             for item in records:
                                 current_app.logger.info(item.header.identifier)
                                 with open(harvestDir + opDir + "_oaiwrapped/" + item.header.identifier + ".xml", "w") as f:
