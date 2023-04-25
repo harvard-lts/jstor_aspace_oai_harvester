@@ -1,0 +1,85 @@
+[{
+  "_id": {
+    "$oid": "643ea657c19d1fe9a34adb9a"
+  },
+  "id": "3979980585",
+  "last_update": {
+    "$date": {
+      "$numberLong": "1682345815504"
+    }
+  },
+  "harvest_date": {
+    "$date": {
+      "$numberLong": "1682294400000"
+    }
+  },
+  "repository_id": "713",
+  "repository_name": "Countway: Warren Anatomical",
+  "repo_short_name": "MED-Warren",
+  "total_harvest_count": 8,
+  "jobname": "jstorforum",
+  "success": false
+},{
+  "_id": {
+    "$oid": "643ea927cc10bf062962d152"
+  },
+  "id": "2451945396",
+  "last_update": {
+    "$date": {
+      "$numberLong": "1682260135432"
+    }
+  },
+  "harvest_date": {
+    "$date": {
+      "$numberLong": "1682208000000"
+    }
+  },
+  "repository_id": "713",
+  "repository_name": "Countway: Warren Anatomical",
+  "repo_short_name": "MED-Warren",
+  "total_harvest_count": 8,
+  "jobname": "jstorforum",
+  "success": false
+},{
+  "_id": {
+    "$oid": "643eacc6c19d1fe9a34adba9"
+  },
+  "id": "2327612501",
+  "last_update": {
+    "$date": {
+      "$numberLong": "1682174662705"
+    }
+  },
+  "harvest_date": {
+    "$date": {
+      "$numberLong": "1682121600000"
+    }
+  },
+  "repository_id": "713",
+  "repository_name": "Countway: Warren Anatomical",
+  "repo_short_name": "MED-Warren",
+  "total_harvest_count": 8,
+  "jobname": "jstorforum",
+  "success": true
+},{
+  "_id": {
+    "$oid": "643eb06f5f49f06262de909b"
+  },
+  "id": "4018320122",
+  "last_update": {
+    "$date": {
+      "$numberLong": "1682089199317"
+    }
+  },
+  "harvest_date": {
+    "$date": {
+      "$numberLong": "1682035200000"
+    }
+  },
+  "repository_id": "713",
+  "repository_name": "Countway: Warren Anatomical",
+  "repo_short_name": "MED-Warren",
+  "total_harvest_count": 8,
+  "jobname": "jstorforum",
+  "success": true
+}]
