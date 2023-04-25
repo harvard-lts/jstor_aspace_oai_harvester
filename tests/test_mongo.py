@@ -9,6 +9,8 @@ load_dotenv()
 harvestdate = date.today() - timedelta(days = 1)
 successdate = datetime(2023, 4, 22)
 
+# to run this test there must be a test mongo collection named test_jstor_harvested_summary in dev, with .env using dev credentials
+# test collection must include data in ./tests/data/test_jstor_harvested_summary.json 
 def test_success_date():
 
     mongo_url = os.environ.get('MONGO_URL')
