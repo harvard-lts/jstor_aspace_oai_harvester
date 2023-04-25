@@ -13,8 +13,8 @@
   - this kicks off the pipeline
 
 - Pytests (one pytest)
+  - requires `pip install pytest` and `pip install dotenv`
   - `> pytest`
-  - (alternatively, if you don't want to install pytest locally, exec -it <containerid> bash, then run pytest)
 
   - to run this test there must be a test mongo collection named test_jstor_harvested_summary in dev, with .env using dev credentials 
   - test collection must include data in ./tests/data/test_jstor_harvested_summary.json
