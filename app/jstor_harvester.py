@@ -83,7 +83,7 @@ class JstorHarvester():
             current_app.logger.info("running aspace harvest")
             aspace = request_json['aspace']
         if aspace:
-            self.do_harvest('aspace', harvestdate, None, "harvestjobs.json", job_ticket_id)
+            self.do_harvest('aspace', harvestdate, None, None, "harvestjobs.json", job_ticket_id)
 
         #integration test: write small record to mongo to prove connectivity
         integration_test = False
@@ -95,7 +95,7 @@ class JstorHarvester():
             # a second call for testing exception and mongo error
             self.do_harvest('jstorforum', None, None, None, "harvestjobs_test.json", job_ticket_id + "_error", True)
             #to do - make aspace date configurable, from and until
-            self.do_harvest('aspace', '2023-02-06', None, "harvestjobs_test.json", job_ticket_id)
+            self.do_harvest('aspace', '2023-02-06', None, None, "harvestjobs_test.json", job_ticket_id)
             try:
                 mongo_url = os.environ.get('MONGO_URL')
                 mongo_dbname = os.environ.get('MONGO_DBNAME')
