@@ -53,6 +53,9 @@ if args.untildate:
     else:
         parser.error('untildate must be a date with format of "YYYY-MM-DD"')
 
+if args.harvesttype is None and args.fromdate is None and args.untildate is None:
+    parser.error('You must use either "--harvesttype full" OR fromdate and/or untildate. Only use dates if directed by documentation')
+
 # Print the resulting string
 res = app1.send_task('tasks.tasks.do_task', args=[message_dict], kwargs={}, queue="harvest_jstorforum")
 
