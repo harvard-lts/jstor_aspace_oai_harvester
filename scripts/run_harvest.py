@@ -15,7 +15,7 @@ setList = [
 ]
 
 # Define the argument parser
-parser = argparse.ArgumentParser(description='Example script that demonstrates how to use argparse to build a dictionary and convert it to a JSON-formatted string.')
+parser = argparse.ArgumentParser(description='Script for harvesting and processing full JSTOR sets.')
 
 # Add some arguments
 parser.add_argument('--jobid', type=str, required = True, help='id for the job, such as 20230428_SCH')
