@@ -32,5 +32,5 @@ tenacity==8.0.1
 toml==0.10.2
 urllib3==1.26.6
 uuid==1.30
-Werkzeug==2.3.4
+Werkzeug==2.3.3
 python-dotenv==0.10.3
