@@ -44,39 +44,91 @@ container_id = socket.gethostname()
 # Get timestamp
 timestamp = datetime.today().strftime('%Y-%m-%d')
 
+logconfig_dict = {}
+
 # Log config
-logconfig_dict = {
-    "version": 1,
-    "disable_existing_loggers": True,
-    "formatters": {
-        "json_formatter": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.JSONRenderer(),
-            "foreign_pre_chain": pre_chain,
-        }
-    },
-    "handlers": {
-        "error_console": {
-        "class": "logging.StreamHandler", 
-        "formatter": "json_formatter",
-        "stream": sys.stderr
+if os.getenv("CONSOLE_LOGGING_ONLY", "true") == "false":
+    # Create a log folder for this container if it doesn't exist
+    container_id = socket.gethostname()
+    if not os.path.exists(f'/home/jstorforumadm/logs/jstor_harvester/{container_id}'):
+        os.makedirs(f'/home/jstorforumadm/logs/jstor_harvester/{container_id}')
+    logconfig_dict = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "json_formatter": {
+                "()": structlog.stdlib.ProcessorFormatter,
+                "processor": structlog.processors.JSONRenderer(),
+                "foreign_pre_chain": pre_chain,
+            }
         },
-        "console": {
-        "class": "logging.StreamHandler",
-        "formatter": "json_formatter", 
-        "stream": sys.stdout
-        }
-    },
-    "loggers": {
-        'gunicorn.error': {
-            'handlers': ['error_console'],
-            'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+        "handlers": {
+            "error_console": {
+                "class": "logging.StreamHandler", 
+                "formatter": "json_formatter",
+                "stream": sys.stderr
+            },
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "json_formatter", 
+                "stream": sys.stdout
+            },
+            "file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "formatter": "json_formatter",
+                "filename": f'/home/jstorforumadm/logs/jstor_harvester/{container_id}/jstor_harvester_{timestamp}.log',
+                "maxBytes": 10485760,
+                "backupCount": 7,
+                "encoding": "utf-8"
+            }
         },
-        'gunicorn.access': {
-            'handlers': ['console'],
-            'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+        "loggers": {
+            'gunicorn.error': {
+                'handlers': ['error_console', 'file'],
+                'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
+                'propagate': False,
+            },
+            'gunicorn.access': {
+                'handlers': ['console', 'file'],
+                'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
+                'propagate': False,
+            }
         }
     }
-}
+
+else: 
+    logconfig_dict = {
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "json_formatter": {
+                "()": structlog.stdlib.ProcessorFormatter,
+                "processor": structlog.processors.JSONRenderer(),
+                "foreign_pre_chain": pre_chain,
+            }
+        },
+        "handlers": {
+            "error_console": {
+                "class": "logging.StreamHandler", 
+                "formatter": "json_formatter",
+                "stream": sys.stderr
+            },
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "json_formatter", 
+                "stream": sys.stdout
+            }
+        },
+        "loggers": {
+            'gunicorn.error': {
+                'handlers': ['error_console'],
+                'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
+                'propagate': False,
+            },
+            'gunicorn.access': {
+                'handlers': ['console'],
+                'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
+                'propagate': False,
+            }
+        }
+    }
