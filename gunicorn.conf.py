@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import structlog
+import sys
 
 class RequestPathFilter(logging.Filter):
     '''Filter class for exempting paths from access log'''
@@ -37,8 +38,8 @@ pre_chain = [
 
 # Create a log folder for this container if it doesn't exist
 container_id = socket.gethostname()
-if not os.path.exists(f'/home/jstorforumadm/logs/jstor_harvester/{container_id}'):
-    os.makedirs(f'/home/jstorforumadm/logs/jstor_harvester/{container_id}')
+# if not os.path.exists(f'/home/jstorforumadm/logs/jstor_harvester/{container_id}'):
+#    os.makedirs(f'/home/jstorforumadm/logs/jstor_harvester/{container_id}')
 
 # Get timestamp
 timestamp = datetime.today().strftime('%Y-%m-%d')
@@ -56,21 +57,19 @@ logconfig_dict = {
     },
     "handlers": {
         "error_console": {
-            "class": "logging.FileHandler",
-            "formatter": "json_formatter",
-            "filename": f"/home/jstorforumadm/logs/jstor_harvester/{container_id}/error_console_{container_id}_{timestamp}.log",
-            "mode": "a"
+        "class": "logging.StreamHandler", 
+        "formatter": "json_formatter",
+        "stream": sys.stderr
         },
         "console": {
-            "class": "logging.FileHandler",
-            "formatter": "json_formatter",
-            "filename": f"/home/jstorforumadm/logs/jstor_harvester/{container_id}/console_{container_id}_{timestamp}.log",
-            "mode": "a"
+        "class": "logging.StreamHandler",
+        "formatter": "json_formatter", 
+        "stream": sys.stdout
         }
     },
     "loggers": {
         'gunicorn.error': {
-            'handlers': ['console'],
+            'handlers': ['error_console'],
             'level': os.environ.get('APP_LOG_LEVEL', 'INFO'),
             'propagate': False,
         },
